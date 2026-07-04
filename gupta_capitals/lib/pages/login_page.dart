@@ -1,6 +1,10 @@
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import '../widgets/custom_widgets.dart';
 import 'register_page.dart';
+import 'user_dashboard.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -11,7 +15,27 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
+  final TextEditingController _identifierController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
   bool _obscure = true;
+  bool _isLoading = false;
+
+  String get _baseUrl {
+    if (kIsWeb) {
+      return 'http://localhost:5000';
+    }
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      return 'http://10.0.2.2:5000';
+    }
+    return 'http://127.0.0.1:5000';
+  }
+
+  @override
+  void dispose() {
+    _identifierController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,6 +61,7 @@ class _LoginPageState extends State<LoginPage> {
                 const SizedBox(height: 32),
                 const FieldLabel('Mobile Number or Email'),
                 TextFormField(
+                  controller: _identifierController,
                   keyboardType: TextInputType.emailAddress,
                   decoration: const InputDecoration(
                     hintText: 'Enter mobile / email',
@@ -47,6 +72,7 @@ class _LoginPageState extends State<LoginPage> {
                 const SizedBox(height: 20),
                 const FieldLabel('Password'),
                 TextFormField(
+                  controller: _passwordController,
                   obscureText: _obscure,
                   decoration: InputDecoration(
                     hintText: 'Enter your password',
@@ -67,10 +93,53 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 const SizedBox(height: 20),
                 PrimaryButton(
-                  text: 'Login',
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {}
-                  },
+                  text: _isLoading ? 'Logging in...' : 'Login',
+                  onPressed: _isLoading
+                      ? () {}
+                      : () async {
+                          if (_formKey.currentState!.validate()) {
+                            setState(() => _isLoading = true);
+
+                            try {
+                              final response = await http
+                                  .post(
+                                    Uri.parse('$_baseUrl/api/login'),
+                                    headers: {'Content-Type': 'application/json'},
+                                    body: jsonEncode({
+                                      'identifier': _identifierController.text.trim(),
+                                      'password': _passwordController.text.trim(),
+                                    }),
+                                  )
+                                  .timeout(const Duration(seconds: 8));
+
+                              if (!mounted) return;
+
+                              final data = jsonDecode(response.body);
+                              if (response.statusCode == 200) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text(data['message'] ?? 'Login successful')),
+                                );
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => const UserDashboard()),
+                                );
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text(data['message'] ?? 'Login failed')),
+                                );
+                              }
+                            } catch (e) {
+                              if (!mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Unable to connect to server: $e')),
+                              );
+                            } finally {
+                              if (mounted) {
+                                setState(() => _isLoading = false);
+                              }
+                            }
+                          }
+                        },
                 ),
                 const SizedBox(height: 24),
                 Row(

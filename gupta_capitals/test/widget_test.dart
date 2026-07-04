@@ -8,23 +8,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:gupta_capitals/main.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:gupta_capitals/pages/user_dashboard.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('User dashboard shows rent and broker details', (WidgetTester tester) async {
+    await tester.pumpWidget(const MaterialApp(home: UserDashboard()));
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.text('Welcome back, Rohan'), findsOneWidget);
+    expect(find.text('Monthly Rent'), findsOneWidget);
+    expect(find.text('Broker Contact'), findsOneWidget);
+    expect(find.text('+91 98765 43210'), findsOneWidget);
+    expect(find.text('Flat 302, Rosewood Apartments'), findsOneWidget);
   });
 }

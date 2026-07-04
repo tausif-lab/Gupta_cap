@@ -1,4 +1,7 @@
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import '../widgets/custom_widgets.dart';
 import 'login_page.dart';
 
@@ -11,8 +14,13 @@ class RegisterPage extends StatefulWidget {
 
 class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _mobileController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
   bool _obscure = true;
   String? _selectedFlat;
+  bool _isLoading = false;
 
   final List<String> _flats = [
     'Flat 101 – Ground Floor',
@@ -22,6 +30,25 @@ class _RegisterPageState extends State<RegisterPage> {
     'Flat 301 – Second Floor',
     'Flat 302 – Second Floor',
   ];
+
+  String get _baseUrl {
+    if (kIsWeb) {
+      return 'http://localhost:5000';
+    }
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      return 'http://10.0.2.2:5000';
+    }
+    return 'http://127.0.0.1:5000';
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _mobileController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,12 +74,14 @@ class _RegisterPageState extends State<RegisterPage> {
                 const SizedBox(height: 28),
                 const FieldLabel('Full Name'),
                 TextFormField(
+                  controller: _nameController,
                   decoration: const InputDecoration(hintText: 'Your full name', prefixIcon: Icon(Icons.person_outline)),
                   validator: (v) => v == null || v.isEmpty ? 'Name is required' : null,
                 ),
                 const SizedBox(height: 18),
                 const FieldLabel('Mobile Number'),
                 TextFormField(
+                  controller: _mobileController,
                   keyboardType: TextInputType.phone,
                   decoration: const InputDecoration(hintText: '10-digit mobile number', prefixIcon: Icon(Icons.phone_outlined)),
                   validator: (v) => v == null || v.length < 10 ? 'Enter valid mobile number' : null,
@@ -60,6 +89,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 const SizedBox(height: 18),
                 const FieldLabel('Email Address (optional)'),
                 TextFormField(
+                  controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   decoration: const InputDecoration(hintText: 'your@email.com', prefixIcon: Icon(Icons.email_outlined)),
                 ),
@@ -83,6 +113,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 const SizedBox(height: 18),
                 const FieldLabel('Set Password'),
                 TextFormField(
+                  controller: _passwordController,
                   obscureText: _obscure,
                   decoration: InputDecoration(
                     hintText: 'Minimum 6 characters',
@@ -96,11 +127,57 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
                 const SizedBox(height: 32),
                 PrimaryButton(
-                  text: 'Register Now',
+                  text: _isLoading ? 'Registering...' : 'Register Now',
                   backgroundColor: const Color(0xFFD4A843),
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {}
-                  },
+                  onPressed: _isLoading
+                      ? () {}
+                      : () async {
+                          if (_formKey.currentState!.validate()) {
+                            setState(() => _isLoading = true);
+
+                            try {
+                              final response = await http
+                                  .post(
+                                    Uri.parse('$_baseUrl/api/register'),
+                                    headers: {'Content-Type': 'application/json'},
+                                    body: jsonEncode({
+                                      'name': _nameController.text.trim(),
+                                      'mobile': _mobileController.text.trim(),
+                                      'email': _emailController.text.trim(),
+                                      'flat': _selectedFlat,
+                                      'password': _passwordController.text.trim(),
+                                    }),
+                                  )
+                                  .timeout(const Duration(seconds: 8));
+
+                              if (!mounted) return;
+
+                              final data = jsonDecode(response.body);
+                              if (response.statusCode == 201) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text(data['message'] ?? 'Registration successful')),
+                                );
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => const LoginPage()),
+                                );
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text(data['message'] ?? 'Registration failed')),
+                                );
+                              }
+                            } catch (e) {
+                              if (!mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Unable to connect to server: $e')),
+                              );
+                            } finally {
+                              if (mounted) {
+                                setState(() => _isLoading = false);
+                              }
+                            }
+                          }
+                        },
                 ),
                 const SizedBox(height: 24),
                 Row(
