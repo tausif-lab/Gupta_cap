@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'admin_login_page.dart';
+import 'admin_queries_page.dart';
 import 'tenant_detail_page.dart';
 
 class AdminDashboard extends StatefulWidget {
@@ -172,11 +173,12 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                            onPressed: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Coming soon!')),
-                              );
-                            },
+                            onPressed: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const AdminQueriesPage(),
+                              ),
+                            ),
                           ),
                         ),
                         const SizedBox(width: 12),

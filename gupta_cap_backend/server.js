@@ -7,6 +7,7 @@ const authRoutes = require("./routes/authRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const rentRoutes = require("./routes/rentRoutes");
 const userRoutes = require("./routes/userRoutes");
+const queryRoutes = require("./routes/queryRoutes");
 
 const app = express();
 
@@ -24,6 +25,7 @@ app.use("/api", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/admin/rent", rentRoutes);
 app.use('/api/user', userRoutes);
+app.use("/api", queryRoutes);
 
 // 404 handler
 app.use((req, res) => {

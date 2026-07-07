@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'user_info_page.dart';
+import 'user_queries_page.dart';
 
 class UserDashboard extends StatelessWidget {
   final String userId;
@@ -105,11 +106,17 @@ class UserDashboard extends StatelessWidget {
                   ),
                 ),
                 _ActionCard(
-                  icon: Icons.report_problem_outlined,
-                  label: 'Report Issue',
+                  icon: Icons.question_answer_outlined,
+                  label: 'Queries',
                   color: const Color(0xFF1A3A5C),
-                  onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Coming soon!')),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => UserQueriesPage(
+                        userId: userId,
+                        userName: userName,
+                      ),
+                    ),
                   ),
                 ),
                 _ActionCard(
