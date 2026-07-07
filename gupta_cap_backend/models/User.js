@@ -29,6 +29,13 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+
+    // Add after the 'flat' field
+    paymentStatus: {
+    type: String,
+    enum: ['Paid', 'Pending', 'Overdue'],
+    default: 'Pending',
+    },
   },
   { timestamps: true },
 );
