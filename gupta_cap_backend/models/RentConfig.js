@@ -12,11 +12,6 @@ const rentConfigSchema = new mongoose.Schema(
       type: Date,
       required: true,
     },
-    dueDays: {
-      type: Number,
-      required: true,
-      default: 10,
-    },
     penaltyStartDay: {
       type: Number,
       required: true,
@@ -34,6 +29,14 @@ const rentConfigSchema = new mongoose.Schema(
     penaltyEnabled: {
       type: Boolean,
       default: true,
+    },
+    rentStartDate: {
+      type: Date,
+      required: true,
+    },
+    currentCycleStart: {
+      type: Date,
+      required: true,
     },
   },
   { timestamps: true },

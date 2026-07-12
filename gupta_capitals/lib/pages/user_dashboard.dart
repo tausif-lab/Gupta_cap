@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'user_info_page.dart';
-
+import 'user_queries_page.dart';
+import 'pay_rent_page.dart';
 class UserDashboard extends StatelessWidget {
   final String userId;
   final String userName;
 
-  const UserDashboard({super.key, required this.userId, required this.userName});
+  const UserDashboard({
+    super.key,
+    required this.userId,
+    required this.userName,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +31,10 @@ class UserDashboard extends StatelessWidget {
               child: const Icon(Icons.apartment, size: 20, color: Colors.white),
             ),
             const SizedBox(width: 10),
-            const Text('Gupta Capitals', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
+            const Text(
+              'Gupta Capitals',
+              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+            ),
           ],
         ),
         actions: [
@@ -47,7 +55,8 @@ class UserDashboard extends StatelessWidget {
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => UserInfoPage(userId: userId, userName: userName),
+                  builder: (_) =>
+                      UserInfoPage(userId: userId, userName: userName),
                 ),
               ),
               child: Container(
@@ -64,7 +73,11 @@ class UserDashboard extends StatelessWidget {
                       backgroundColor: const Color(0xFFD4A843),
                       child: Text(
                         userName.isNotEmpty ? userName[0].toUpperCase() : 'U',
-                        style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -72,20 +85,44 @@ class UserDashboard extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(userName, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700)),
+                          Text(
+                            userName,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
                           const SizedBox(height: 4),
-                          const Text('Tap to view your details & rent info', style: TextStyle(color: Color(0xFF8AAAC4), fontSize: 13)),
+                          const Text(
+                            'Tap to view your details & rent info',
+                            style: TextStyle(
+                              color: Color(0xFF8AAAC4),
+                              fontSize: 13,
+                            ),
+                          ),
                         ],
                       ),
                     ),
-                    const Icon(Icons.arrow_forward_ios, color: Color(0xFFD4A843), size: 16),
+                    const Icon(
+                      Icons.arrow_forward_ios,
+                      color: Color(0xFFD4A843),
+                      size: 16,
+                    ),
                   ],
                 ),
               ),
             ),
             const SizedBox(height: 28),
 
-            const Text('Quick Actions', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: Color(0xFF1A3A5C))),
+            const Text(
+              'Quick Actions',
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF1A3A5C),
+              ),
+            ),
             const SizedBox(height: 14),
 
             // 4 action cards
@@ -100,33 +137,41 @@ class UserDashboard extends StatelessWidget {
                   icon: Icons.payment_outlined,
                   label: 'Pay Rent',
                   color: const Color(0xFFD4A843),
-                  onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Coming soon!')),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          PayRentPage(userId: userId, userName: userName),
+                    ),
                   ),
                 ),
                 _ActionCard(
-                  icon: Icons.report_problem_outlined,
-                  label: 'Report Issue',
+                  icon: Icons.question_answer_outlined,
+                  label: 'Queries',
                   color: const Color(0xFF1A3A5C),
-                  onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Coming soon!')),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          UserQueriesPage(userId: userId, userName: userName),
+                    ),
                   ),
                 ),
                 _ActionCard(
                   icon: Icons.description_outlined,
                   label: 'View Lease',
                   color: const Color(0xFF1A3A5C),
-                  onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Coming soon!')),
-                  ),
+                  onTap: () => ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(const SnackBar(content: Text('Coming soon!'))),
                 ),
                 _ActionCard(
                   icon: Icons.history_outlined,
                   label: 'Payment History',
                   color: const Color(0xFFD4A843),
-                  onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Coming soon!')),
-                  ),
+                  onTap: () => ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(const SnackBar(content: Text('Coming soon!'))),
                 ),
               ],
             ),
@@ -143,7 +188,12 @@ class _ActionCard extends StatelessWidget {
   final Color color;
   final VoidCallback onTap;
 
-  const _ActionCard({required this.icon, required this.label, required this.color, required this.onTap});
+  const _ActionCard({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -153,18 +203,34 @@ class _ActionCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 6, offset: const Offset(0, 2))],
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
               padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(color: color.withOpacity(0.12), shape: BoxShape.circle),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.12),
+                shape: BoxShape.circle,
+              ),
               child: Icon(icon, color: color, size: 30),
             ),
             const SizedBox(height: 12),
-            Text(label, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: color)),
+            Text(
+              label,
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
+                color: color,
+              ),
+            ),
           ],
         ),
       ),

@@ -13,39 +13,49 @@ const getUserDetails = async (req, res) => {
     let rentInfo = null;
     if (config) {
       const today = new Date();
-      const startDate = new Date(config.rentStartDate);
+today.setHours(0, 0, 0, 0);
 
-      // Calculate next due date (same day of month as startDate, current or next month)
-      const dueDate = new Date(today.getFullYear(), today.getMonth(), startDate.getDate() + config.dueDays - 1);
-      if (dueDate < today) {
-        dueDate.setMonth(dueDate.getMonth() + 1);
-      }
+const cycleStart = new Date(config.currentCycleStart || config.rentStartDate);
+cycleStart.setHours(0, 0, 0, 0);
 
-      const daysLeft = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+// Prepaid: due date is the start of the billing period (pay before you stay)
+const dueDate = new Date(cycleStart);
+
+const daysLeft = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+
+
+// Roll forward month by month until we reach the current/upcoming cycle
+/*while (dueDate < today) {
+  dueDate.setMonth(dueDate.getMonth() + 1);
+}
+*/
 
       // Calculate penalty
       let penaltyAmount = 0;
-      if (config.penaltyEnabled && daysLeft < 0) {
-        const overdueDays = Math.abs(daysLeft) - config.penaltyStartDay;
-        if (overdueDays > 0) {
-          penaltyAmount = overdueDays * config.penaltyPerDay;
-        }
-      }
+if (config.penaltyEnabled && daysLeft < 0) {
+  const overdueDays = Math.abs(daysLeft);
+  if (overdueDays > config.penaltyStartDay) {
+    penaltyAmount = (overdueDays - config.penaltyStartDay) * config.penaltyPerDay;
+  }
+}
 
-      rentInfo = {
-        monthlyRent: config.monthlyRent,
-        rentStartDate: config.rentStartDate,
-        dueDays: config.dueDays,
-        dueDate,
-        daysLeft,
-        penaltyEnabled: config.penaltyEnabled,
-        penaltyPerDay: config.penaltyPerDay,
-        penaltyStartDay: config.penaltyStartDay,
-        penaltyAmount,
-        totalDue: config.monthlyRent + penaltyAmount,
-      };
+// Label like "July 2026" for clarity in the UI
+const cycleMonthLabel = cycleStart.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+
+rentInfo = {
+  monthlyRent: config.monthlyRent,
+  cycleStart,
+  cycleMonthLabel,
+  dueDate,
+  daysLeft,
+  penaltyEnabled: config.penaltyEnabled,
+  penaltyPerDay: config.penaltyPerDay,
+  penaltyStartDay: config.penaltyStartDay,
+  penaltyAmount,
+  totalDue: config.monthlyRent + penaltyAmount,
+};
     }
-
+    console.log('SENDING RENT INFO:', rentInfo);
     res.json({ user, rentInfo });
   } catch (error) {
     console.error('GET USER DETAILS ERROR:', error);
