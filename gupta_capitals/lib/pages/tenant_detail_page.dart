@@ -20,7 +20,6 @@ class TenantDetailPage extends StatefulWidget {
 class _TenantDetailPageState extends State<TenantDetailPage> {
   final _formKey = GlobalKey<FormState>();
   final _monthlyRentController = TextEditingController();
-  final _dueDaysController = TextEditingController();
   final _penaltyStartDayController = TextEditingController();
   final _penaltyPerDayController = TextEditingController();
 
@@ -99,7 +98,6 @@ class _TenantDetailPageState extends State<TenantDetailPage> {
   @override
   void dispose() {
     _monthlyRentController.dispose();
-    _dueDaysController.dispose();
     _penaltyStartDayController.dispose();
     _penaltyPerDayController.dispose();
     super.dispose();
@@ -117,7 +115,6 @@ class _TenantDetailPageState extends State<TenantDetailPage> {
         final data = jsonDecode(response.body);
         setState(() {
           _rentStartDate = DateTime.parse(data['rentStartDate']);
-          _dueDaysController.text = data['dueDays'].toString();
           _penaltyStartDayController.text = data['penaltyStartDay'].toString();
           _monthlyRentController.text = data['monthlyRent'].toString();
           _penaltyPerDayController.text = data['penaltyPerDay'].toString();
@@ -147,7 +144,6 @@ class _TenantDetailPageState extends State<TenantDetailPage> {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'rentStartDate': _rentStartDate!.toIso8601String(),
-          'dueDays': int.parse(_dueDaysController.text.trim()),
           'penaltyStartDay': int.parse(_penaltyStartDayController.text.trim()),
           'monthlyRent': double.parse(_monthlyRentController.text.trim()),
           'penaltyPerDay': double.parse(_penaltyPerDayController.text.trim()),
@@ -233,22 +229,6 @@ class _TenantDetailPageState extends State<TenantDetailPage> {
                           ],
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 18),
-
-                    // Due Days
-                    const Text('Rent Due Days (after start date)', style: TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF1A3A5C))),
-                    const SizedBox(height: 8),
-                    TextFormField(
-                      controller: _dueDaysController,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        hintText: 'e.g. 10',
-                        prefixIcon: Icon(Icons.calendar_month_outlined),
-                        filled: true,
-                        fillColor: Colors.white,
-                      ),
-                      validator: (v) => v == null || v.isEmpty ? 'Required' : null,
                     ),
                     const SizedBox(height: 18),
 

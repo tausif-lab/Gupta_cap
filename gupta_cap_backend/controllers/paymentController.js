@@ -49,9 +49,9 @@ if (config) {
   // Fallback to rentStartDate if currentCycleStart was never set (old records)
   const baseCycle = new Date(config.currentCycleStart || config.rentStartDate);
 
-  // New cycle starts exactly at the old due date (baseCycle + dueDays)
+  // Prepaid: next cycle starts 1 month after the current cycle start
   const nextCycle = new Date(baseCycle);
-  nextCycle.setDate(nextCycle.getDate() + config.dueDays);
+  nextCycle.setMonth(nextCycle.getMonth() + 1);
 
   config.currentCycleStart = nextCycle;
   await config.save({ validateModifiedOnly: true });

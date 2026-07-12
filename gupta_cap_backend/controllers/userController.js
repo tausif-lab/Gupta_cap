@@ -18,9 +18,8 @@ today.setHours(0, 0, 0, 0);
 const cycleStart = new Date(config.currentCycleStart || config.rentStartDate);
 cycleStart.setHours(0, 0, 0, 0);
 
-// Due date is fixed relative to the current (unpaid) cycle — no rolling forward here
+// Prepaid: due date is the start of the billing period (pay before you stay)
 const dueDate = new Date(cycleStart);
-dueDate.setDate(dueDate.getDate() + config.dueDays);
 
 const daysLeft = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
 
@@ -47,7 +46,6 @@ rentInfo = {
   monthlyRent: config.monthlyRent,
   cycleStart,
   cycleMonthLabel,
-  dueDays: config.dueDays,
   dueDate,
   daysLeft,
   penaltyEnabled: config.penaltyEnabled,

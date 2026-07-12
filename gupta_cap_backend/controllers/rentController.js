@@ -25,7 +25,6 @@ const saveRentConfig = async (req, res) => {
   try {
     const {
       rentStartDate,
-      dueDays,
       penaltyStartDay,
       monthlyRent,
       penaltyPerDay,
@@ -45,7 +44,6 @@ const saveRentConfig = async (req, res) => {
       {
         userId: req.params.userId,
         rentStartDate,
-        dueDays,
         penaltyStartDay,
         monthlyRent,
         penaltyPerDay,
