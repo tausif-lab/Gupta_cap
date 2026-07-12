@@ -29,16 +29,71 @@ class _TenantDetailPageState extends State<TenantDetailPage> {
   bool _isLoading = true;
   bool _isSaving = false;
 
+  List<dynamic> _paymentRequests = [];
+  bool _isLoadingRequests = true;
+  String? _verifyingRequestId;
+
   String get _baseUrl {
     if (kIsWeb) return 'http://localhost:3000';
     if (defaultTargetPlatform == TargetPlatform.android) return 'http://10.0.2.2:3000';
     return 'http://127.0.0.1:3000';
   }
 
-  @override
+ @override
   void initState() {
     super.initState();
     _loadRentConfig();
+    _loadPaymentRequests();
+  }
+
+  Future<void> _loadPaymentRequests() async {
+    try {
+      final response = await http
+          .get(Uri.parse('$_baseUrl/api/payment/tenant-requests/${widget.tenantId}'))
+          .timeout(const Duration(seconds: 8));
+
+      if (!mounted) return;
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        setState(() {
+          _paymentRequests = data['requests'];
+          _isLoadingRequests = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _isLoadingRequests = false);
+    }
+  }
+
+  Future<void> _verifyRequest(String requestId) async {
+    setState(() => _verifyingRequestId = requestId);
+    try {
+      final response = await http
+          .post(Uri.parse('$_baseUrl/api/payment/verify/$requestId'))
+          .timeout(const Duration(seconds: 8));
+
+      if (!mounted) return;
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Payment verified — cycle restarted')),
+        );
+        _loadPaymentRequests();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(data['message'] ?? 'Failed to verify')),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _verifyingRequestId = null);
+    }
   }
 
   @override
@@ -137,13 +192,18 @@ class _TenantDetailPageState extends State<TenantDetailPage> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
+           : SingleChildScrollView(
               padding: const EdgeInsets.all(20),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildPaymentRequestsSection(),
+                  const SizedBox(height: 28),
+                  Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                     // Rent Start Date
                     const Text('Rent Start Date', style: TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF1A3A5C))),
                     const SizedBox(height: 8),
@@ -269,10 +329,94 @@ class _TenantDetailPageState extends State<TenantDetailPage> {
                         ),
                       ),
                     ),
-                  ],
-                ),
+                 ],
+                    ),
+                  ),
+                ],
               ),
             ),
+    );
+  }
+
+  Widget _buildPaymentRequestsSection() {
+    if (_isLoadingRequests) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    final pending = _paymentRequests.where((r) => r['status'] == 'Pending Verification').toList();
+
+    if (pending.isEmpty) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFFD0C9BC)),
+        ),
+        child: const Text('No pending payment requests', style: TextStyle(color: Color(0xFF6B6154))),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Pending Payment Requests', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: Color(0xFF1A3A5C))),
+        const SizedBox(height: 12),
+        ...pending.map((req) {
+          final isVerifying = _verifyingRequestId == req['_id'];
+          return Container(
+            width: double.infinity,
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: const Color(0xFFD4A843)),
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 6, offset: const Offset(0, 2))],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(req['cycleMonthLabel'] ?? '', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: Color(0xFF1A3A5C))),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Colors.orange),
+                      ),
+                      child: const Text('Pending', style: TextStyle(color: Colors.orange, fontWeight: FontWeight.w600, fontSize: 12)),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text('Rent: ₹${req['monthlyRent']}', style: const TextStyle(fontSize: 13, color: Color(0xFF6B6154))),
+                if ((req['penaltyAmount'] ?? 0) > 0)
+                  Text('Penalty: ₹${req['penaltyAmount']}', style: const TextStyle(fontSize: 13, color: Colors.red)),
+                Text('Total Paid: ₹${req['totalPaid']}', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: Color(0xFFD4A843))),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: isVerifying ? null : () => _verifyRequest(req['_id']),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF1A3A5C),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                    child: Text(isVerifying ? 'Verifying...' : 'Mark as Verified'),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+      ],
     );
   }
 }

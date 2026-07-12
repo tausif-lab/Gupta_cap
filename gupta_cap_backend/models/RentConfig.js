@@ -35,6 +35,14 @@ const rentConfigSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    rentStartDate: {
+      type: Date,
+      required: true,
+    },
+    currentCycleStart: {
+      type: Date,
+      required: true,
+    },
   },
   { timestamps: true },
 );
