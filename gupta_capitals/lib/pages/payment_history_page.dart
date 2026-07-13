@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import '../services/auth_service.dart';
 import 'payment_detail_page.dart';
 
@@ -31,9 +30,7 @@ class _PaymentHistoryPageState extends State<PaymentHistoryPage> {
 
   Future<void> _fetchHistory() async {
     try {
-      final response = await http
-          .get(Uri.parse('${AuthService().baseUrl}/api/payment/history/${widget.userId}'), headers: AuthService().headers)
-          .timeout(const Duration(seconds: 8));
+      final response = await AuthService().get('/api/payment/history/${widget.userId}');
 
       if (!mounted) return;
       final data = jsonDecode(response.body);

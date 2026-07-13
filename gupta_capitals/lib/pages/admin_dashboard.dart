@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import '../services/auth_service.dart';
 import 'admin_login_page.dart';
 import 'admin_queries_page.dart';
@@ -28,9 +27,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
   Future<void> _fetchTenants() async {
     try {
-      final response = await http
-          .get(Uri.parse('${AuthService().baseUrl}/api/admin/tenants'), headers: AuthService().headers)
-          .timeout(const Duration(seconds: 8));
+      final response = await AuthService().get('/api/admin/tenants');
 
       if (!mounted) return;
       final data = jsonDecode(response.body);

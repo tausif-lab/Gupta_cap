@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import '../services/auth_service.dart';
 
 class UserInfoPage extends StatefulWidget {
@@ -27,9 +26,7 @@ class _UserInfoPageState extends State<UserInfoPage> {
 
   Future<void> _fetchDetails() async {
     try {
-      final response = await http
-          .get(Uri.parse('${AuthService().baseUrl}/api/user/${widget.userId}'), headers: AuthService().headers)
-          .timeout(const Duration(seconds: 8));
+      final response = await AuthService().get('/api/user/${widget.userId}');
 
       if (!mounted) return;
       final data = jsonDecode(response.body);

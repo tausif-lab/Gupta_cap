@@ -1,7 +1,5 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import '../services/auth_service.dart';
 import '../widgets/custom_widgets.dart';
 import 'register_page.dart';
@@ -20,12 +18,6 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _passwordController = TextEditingController();
   bool _obscure = true;
   bool _isLoading = false;
-
-  String get _baseUrl {
-    if (kIsWeb) return 'http://localhost:3000';
-    if (defaultTargetPlatform == TargetPlatform.android) return 'http://10.0.2.2:3000';
-    return 'http://127.0.0.1:3000';
-  }
 
   @override
   void dispose() {
@@ -94,16 +86,13 @@ class _LoginPageState extends State<LoginPage> {
                           if (_formKey.currentState!.validate()) {
                             setState(() => _isLoading = true);
                             try {
-                              final response = await http
-                                  .post(
-                                    Uri.parse('$_baseUrl/api/login'),
-                                    headers: {'Content-Type': 'application/json'},
-                                    body: jsonEncode({
-                                      'identifier': _identifierController.text.trim(),
-                                      'password': _passwordController.text.trim(),
-                                    }),
-                                  )
-                                  .timeout(const Duration(seconds: 8));
+                              final response = await AuthService().post(
+                                '/api/login',
+                                body: {
+                                  'identifier': _identifierController.text.trim(),
+                                  'password': _passwordController.text.trim(),
+                                },
+                              );
 
                               if (!mounted) return;
                               final data = jsonDecode(response.body);

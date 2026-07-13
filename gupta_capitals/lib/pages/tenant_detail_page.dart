@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import '../services/auth_service.dart';
 
 class TenantDetailPage extends StatefulWidget {
@@ -42,9 +41,7 @@ class _TenantDetailPageState extends State<TenantDetailPage> {
 
   Future<void> _loadPaymentRequests() async {
     try {
-      final response = await http
-          .get(Uri.parse('${AuthService().baseUrl}/api/payment/tenant-requests/${widget.tenantId}'), headers: AuthService().headers)
-          .timeout(const Duration(seconds: 8));
+      final response = await AuthService().get('/api/payment/tenant-requests/${widget.tenantId}');
 
       if (!mounted) return;
       final data = jsonDecode(response.body);
@@ -63,9 +60,7 @@ class _TenantDetailPageState extends State<TenantDetailPage> {
   Future<void> _verifyRequest(String requestId) async {
     setState(() => _verifyingRequestId = requestId);
     try {
-      final response = await http
-          .post(Uri.parse('${AuthService().baseUrl}/api/payment/verify/$requestId'), headers: AuthService().headers)
-          .timeout(const Duration(seconds: 8));
+      final response = await AuthService().post('/api/payment/verify/$requestId');
 
       if (!mounted) return;
       final data = jsonDecode(response.body);
@@ -100,9 +95,7 @@ class _TenantDetailPageState extends State<TenantDetailPage> {
 
   Future<void> _loadRentConfig() async {
     try {
-      final response = await http
-          .get(Uri.parse('${AuthService().baseUrl}/api/admin/rent/${widget.tenantId}'), headers: AuthService().headers)
-          .timeout(const Duration(seconds: 8));
+      final response = await AuthService().get('/api/admin/rent/${widget.tenantId}');
 
       if (!mounted) return;
 
@@ -134,17 +127,13 @@ class _TenantDetailPageState extends State<TenantDetailPage> {
 
     setState(() => _isSaving = true);
     try {
-      final response = await http.post(
-        Uri.parse('${AuthService().baseUrl}/api/admin/rent/${widget.tenantId}'),
-        headers: AuthService().headers,
-        body: jsonEncode({
-          'rentStartDate': _rentStartDate!.toIso8601String(),
-          'penaltyStartDay': int.parse(_penaltyStartDayController.text.trim()),
-          'monthlyRent': double.parse(_monthlyRentController.text.trim()),
-          'penaltyPerDay': double.parse(_penaltyPerDayController.text.trim()),
-          'penaltyEnabled': _penaltyEnabled,
-        }),
-      ).timeout(const Duration(seconds: 8));
+      final response = await AuthService().post('/api/admin/rent/${widget.tenantId}', body: {
+        'rentStartDate': _rentStartDate!.toIso8601String(),
+        'penaltyStartDay': int.parse(_penaltyStartDayController.text.trim()),
+        'monthlyRent': double.parse(_monthlyRentController.text.trim()),
+        'penaltyPerDay': double.parse(_penaltyPerDayController.text.trim()),
+        'penaltyEnabled': _penaltyEnabled,
+      });
 
       if (!mounted) return;
       final data = jsonDecode(response.body);

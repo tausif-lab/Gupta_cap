@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import '../services/auth_service.dart';
 
 class NotificationsPage extends StatefulWidget {
@@ -25,9 +24,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
 
   Future<void> _fetchNotifications() async {
     try {
-      final response = await http
-          .get(Uri.parse('${AuthService().baseUrl}/api/notifications/${widget.userId}'), headers: AuthService().headers)
-          .timeout(const Duration(seconds: 8));
+      final response = await AuthService().get('/api/notifications/${widget.userId}');
 
       if (!mounted) return;
       final data = jsonDecode(response.body);
@@ -45,14 +42,14 @@ class _NotificationsPageState extends State<NotificationsPage> {
 
   Future<void> _markAsRead(String id) async {
     try {
-      await http.put(Uri.parse('${AuthService().baseUrl}/api/notifications/$id/read'), headers: AuthService().headers);
+      await AuthService().put('/api/notifications/$id/read');
       _fetchNotifications();
     } catch (_) {}
   }
 
   Future<void> _markAllAsRead() async {
     try {
-      await http.put(Uri.parse('${AuthService().baseUrl}/api/notifications/read-all/${widget.userId}'), headers: AuthService().headers);
+      await AuthService().put('/api/notifications/read-all/${widget.userId}');
       _fetchNotifications();
     } catch (_) {}
   }

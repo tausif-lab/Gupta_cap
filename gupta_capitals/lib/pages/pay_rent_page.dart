@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import '../services/auth_service.dart';
 
 class PayRentPage extends StatefulWidget {
@@ -30,9 +29,7 @@ class _PayRentPageState extends State<PayRentPage> {
 
   Future<void> _checkPaymentStatus() async {
     try {
-      final response = await http
-          .get(Uri.parse('${AuthService().baseUrl}/api/payment/status/${widget.userId}'), headers: AuthService().headers)
-          .timeout(const Duration(seconds: 8));
+      final response = await AuthService().get('/api/payment/status/${widget.userId}');
 
       if (!mounted) return;
       final data = jsonDecode(response.body);
@@ -48,9 +45,7 @@ class _PayRentPageState extends State<PayRentPage> {
 
   Future<void> _fetchDetails() async {
     try {
-      final response = await http
-          .get(Uri.parse('${AuthService().baseUrl}/api/user/${widget.userId}'), headers: AuthService().headers)
-          .timeout(const Duration(seconds: 8));
+      final response = await AuthService().get('/api/user/${widget.userId}');
 
       if (!mounted) return;
       final data = jsonDecode(response.body);
@@ -73,11 +68,7 @@ class _PayRentPageState extends State<PayRentPage> {
 
   Future<void> _sendPaymentReminder() async {
     try {
-      await http.post(
-        Uri.parse('${AuthService().baseUrl}/api/notifications/remind-payment'),
-        headers: AuthService().headers,
-        body: jsonEncode({'userId': widget.userId}),
-      );
+      await AuthService().post('/api/notifications/remind-payment', body: {'userId': widget.userId});
     } catch (_) {
     }
   }
@@ -85,10 +76,7 @@ class _PayRentPageState extends State<PayRentPage> {
   Future<void> _submitPaymentRequest() async {
     setState(() => _isSubmitting = true);
     try {
-      final response = await http.post(
-        Uri.parse('${AuthService().baseUrl}/api/payment/request'),
-        headers: AuthService().headers,
-        body: jsonEncode({
+      final response = await AuthService().post('/api/payment/request', body: {
   'userId': widget.userId,
   'userName': _user!['name'],
   'mobile': _user!['mobile'],
@@ -100,8 +88,7 @@ class _PayRentPageState extends State<PayRentPage> {
   'cycleStart': _rentInfo!['cycleStart'],
   'periodEnd': _rentInfo!['periodEnd'],
   'cycleMonthLabel': _rentInfo!['cycleMonthLabel'],
-}),
-      ).timeout(const Duration(seconds: 8));
+});
 
       if (!mounted) return;
       final data = jsonDecode(response.body);

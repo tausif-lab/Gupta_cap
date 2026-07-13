@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import '../services/auth_service.dart';
 
 class UserQueriesPage extends StatefulWidget {
@@ -44,9 +43,7 @@ class _UserQueriesPageState extends State<UserQueriesPage> {
   Future<void> _fetchQueries() async {
     setState(() => _isLoading = true);
     try {
-      final response = await http
-          .get(Uri.parse('${AuthService().baseUrl}/api/query/user/${widget.userId}'), headers: AuthService().headers)
-          .timeout(const Duration(seconds: 8));
+      final response = await AuthService().get('/api/query/user/${widget.userId}');
 
       if (!mounted) return;
       final data = jsonDecode(response.body);
@@ -71,17 +68,11 @@ class _UserQueriesPageState extends State<UserQueriesPage> {
 
     setState(() => _isSubmitting = true);
     try {
-      final response = await http
-          .post(
-            Uri.parse('${AuthService().baseUrl}/api/query'),
-            headers: AuthService().headers,
-            body: jsonEncode({
-              'userId': widget.userId,
-              'subject': _subjectController.text.trim(),
-              'message': _messageController.text.trim(),
-            }),
-          )
-          .timeout(const Duration(seconds: 8));
+      final response = await AuthService().post('/api/query', body: {
+        'userId': widget.userId,
+        'subject': _subjectController.text.trim(),
+        'message': _messageController.text.trim(),
+      });
 
       if (!mounted) return;
       final data = jsonDecode(response.body);
