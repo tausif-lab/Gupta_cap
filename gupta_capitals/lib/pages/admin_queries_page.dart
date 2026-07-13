@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import '../services/auth_service.dart';
 
 class AdminQueriesPage extends StatefulWidget {
   const AdminQueriesPage({super.key});
@@ -17,13 +18,6 @@ class _AdminQueriesPageState extends State<AdminQueriesPage> {
   String _activeFilter = 'all';
 
   final _replyController = TextEditingController();
-
-  String get _baseUrl {
-    if (kIsWeb) return 'http://localhost:3000';
-    if (defaultTargetPlatform == TargetPlatform.android)
-      return 'http://10.0.2.2:3000';
-    return 'http://127.0.0.1:3000';
-  }
 
   @override
   void initState() {
@@ -41,7 +35,7 @@ class _AdminQueriesPageState extends State<AdminQueriesPage> {
     setState(() => _isLoading = true);
     try {
       final response = await http
-          .get(Uri.parse('$_baseUrl/api/admin/queries'))
+          .get(Uri.parse('${AuthService().baseUrl}/api/admin/queries'), headers: AuthService().headers)
           .timeout(const Duration(seconds: 8));
 
       if (!mounted) return;
@@ -80,8 +74,8 @@ class _AdminQueriesPageState extends State<AdminQueriesPage> {
     try {
       final response = await http
           .put(
-            Uri.parse('$_baseUrl/api/admin/queries/$queryId/resolve'),
-            headers: {'Content-Type': 'application/json'},
+            Uri.parse('${AuthService().baseUrl}/api/admin/queries/$queryId/resolve'),
+            headers: AuthService().headers,
             body: jsonEncode({'adminReply': reply}),
           )
           .timeout(const Duration(seconds: 8));

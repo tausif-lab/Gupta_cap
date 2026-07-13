@@ -6,11 +6,12 @@ const {
   getPaymentStatus,
   getTenantPaymentRequests
 } = require("../controllers/paymentController");
+const { verifyToken, adminOnly } = require("../middleware/auth");
 
-router.post("/request", createPaymentRequest);
-router.post("/verify/:requestId", verifyPaymentRequest);
-router.get("/status/:userId", getPaymentStatus);
-router.get('/tenant-requests/:userId', getTenantPaymentRequests);
+router.post("/request", verifyToken, createPaymentRequest);
+router.post("/verify/:requestId", verifyToken, adminOnly, verifyPaymentRequest);
+router.get("/status/:userId", verifyToken, getPaymentStatus);
+router.get('/tenant-requests/:userId', verifyToken, getTenantPaymentRequests);
+router.get('/history/:userId', verifyToken, getTenantPaymentRequests);
 
-router.get('/history/:userId', getTenantPaymentRequests);
 module.exports = router;

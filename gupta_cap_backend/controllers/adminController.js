@@ -1,7 +1,6 @@
 const User = require('../models/User');
+const { generateToken } = require('../middleware/auth');
 
-// @desc  Admin login (hardcoded from .env)
-// @route POST /api/admin/login
 const adminLogin = async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -17,18 +16,18 @@ const adminLogin = async (req, res) => {
       return res.status(401).json({ message: 'Invalid admin credentials' });
     }
 
-    res.json({ message: 'Admin login successful', role: 'admin' });
+    const token = generateToken({ role: 'admin' });
+
+    res.json({ message: 'Admin login successful', token, role: 'admin' });
   } catch (error) {
     console.error('ADMIN LOGIN ERROR:', error);
     res.status(500).json({ message: 'Login failed', error: error.message });
   }
 };
 
-// @desc  Get all tenants with count
-// @route GET /api/admin/tenants
 const getAllTenants = async (req, res) => {
   try {
-    const tenants = await User.find({}, 'name mobile flat paymentStatus email');
+    const tenants = await User.find({}, 'name mobile floor room roomType flat paymentStatus email');
     res.json({
       totalTenants: tenants.length,
       tenants,

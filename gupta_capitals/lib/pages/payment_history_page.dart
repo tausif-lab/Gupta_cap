@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import '../services/auth_service.dart';
 import 'payment_detail_page.dart';
 
 class PaymentHistoryPage extends StatefulWidget {
@@ -22,13 +23,6 @@ class _PaymentHistoryPageState extends State<PaymentHistoryPage> {
   List<dynamic> _history = [];
   bool _isLoading = true;
 
-  String get _baseUrl {
-    if (kIsWeb) return 'http://localhost:3000';
-    if (defaultTargetPlatform == TargetPlatform.android)
-      return 'http://10.0.2.2:3000';
-    return 'http://127.0.0.1:3000';
-  }
-
   @override
   void initState() {
     super.initState();
@@ -38,7 +32,7 @@ class _PaymentHistoryPageState extends State<PaymentHistoryPage> {
   Future<void> _fetchHistory() async {
     try {
       final response = await http
-          .get(Uri.parse('$_baseUrl/api/payment/history/${widget.userId}'))
+          .get(Uri.parse('${AuthService().baseUrl}/api/payment/history/${widget.userId}'), headers: AuthService().headers)
           .timeout(const Duration(seconds: 8));
 
       if (!mounted) return;

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import '../widgets/custom_widgets.dart';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import '../services/auth_service.dart';
+import '../widgets/custom_widgets.dart';
 import 'admin_dashboard.dart';
 
 class AdminLoginPage extends StatefulWidget {
@@ -11,8 +12,6 @@ class AdminLoginPage extends StatefulWidget {
   @override
   State<AdminLoginPage> createState() => _AdminLoginPageState();
 }
-
-
 
 class _AdminLoginPageState extends State<AdminLoginPage> {
   final _formKey = GlobalKey<FormState>();
@@ -33,6 +32,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
     _passwordController.dispose();
     super.dispose();
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -56,26 +56,12 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                     color: const Color(0xFFD4A843),
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: const Icon(
-                    Icons.admin_panel_settings,
-                    size: 50,
-                    color: Colors.white,
-                  ),
+                  child: const Icon(Icons.admin_panel_settings, size: 50, color: Colors.white),
                 ),
                 const SizedBox(height: 16),
-                const Text(
-                  'Admin / Owner Portal',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
+                const Text('Admin / Owner Portal', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w800)),
                 const SizedBox(height: 6),
-                const Text(
-                  'Manage tenants, payments & more',
-                  style: TextStyle(color: Color(0xFF8AAAC4), fontSize: 14),
-                ),
+                const Text('Manage tenants, payments & more', style: TextStyle(color: Color(0xFF8AAAC4), fontSize: 14)),
                 const SizedBox(height: 32),
                 Container(
                   padding: const EdgeInsets.all(24),
@@ -89,12 +75,8 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                       const FieldLabel('Admin Username'),
                       TextFormField(
                         controller: _usernameController,
-                        decoration: const InputDecoration(
-                          hintText: 'Enter admin username',
-                          prefixIcon: Icon(Icons.manage_accounts_outlined),
-                        ),
-                        validator: (v) =>
-                            v == null || v.isEmpty ? 'Username required' : null,
+                        decoration: const InputDecoration(hintText: 'Enter admin username', prefixIcon: Icon(Icons.manage_accounts_outlined)),
+                        validator: (v) => v == null || v.isEmpty ? 'Username required' : null,
                       ),
                       const SizedBox(height: 18),
                       const FieldLabel('Password'),
@@ -105,17 +87,11 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                           hintText: 'Enter admin password',
                           prefixIcon: const Icon(Icons.lock_outline),
                           suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscure
-                                  ? Icons.visibility_outlined
-                                  : Icons.visibility_off_outlined,
-                            ),
-                            onPressed: () =>
-                                setState(() => _obscure = !_obscure),
+                            icon: Icon(_obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined),
+                            onPressed: () => setState(() => _obscure = !_obscure),
                           ),
                         ),
-                        validator: (v) =>
-                            v == null || v.isEmpty ? 'Password required' : null,
+                        validator: (v) => v == null || v.isEmpty ? 'Password required' : null,
                       ),
                       const SizedBox(height: 28),
                       PrimaryButton(
@@ -128,17 +104,11 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                                   try {
                                     final response = await http
                                         .post(
-                                          Uri.parse(
-                                            '$_baseUrl/api/admin/login',
-                                          ),
-                                          headers: {
-                                            'Content-Type': 'application/json',
-                                          },
+                                          Uri.parse('$_baseUrl/api/admin/login'),
+                                          headers: {'Content-Type': 'application/json'},
                                           body: jsonEncode({
-                                            'username': _usernameController.text
-                                                .trim(),
-                                            'password': _passwordController.text
-                                                .trim(),
+                                            'username': _usernameController.text.trim(),
+                                            'password': _passwordController.text.trim(),
                                           }),
                                         )
                                         .timeout(const Duration(seconds: 8));
@@ -147,34 +117,27 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                                     final data = jsonDecode(response.body);
 
                                     if (response.statusCode == 200) {
+                                      await AuthService().saveSession(
+                                        token: data['token'],
+                                        role: 'admin',
+                                      );
+                                      if (!mounted) return;
                                       Navigator.pushReplacement(
                                         context,
-                                        MaterialPageRoute(
-                                          builder: (_) =>
-                                              const AdminDashboard(),
-                                        ),
+                                        MaterialPageRoute(builder: (_) => const AdminDashboard()),
                                       );
                                     } else {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            data['message'] ?? 'Login failed',
-                                          ),
-                                        ),
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(content: Text(data['message'] ?? 'Login failed')),
                                       );
                                     }
                                   } catch (e) {
                                     if (!mounted) return;
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text('Unable to connect: $e'),
-                                      ),
+                                      SnackBar(content: Text('Unable to connect: $e')),
                                     );
                                   } finally {
-                                    if (mounted)
-                                      setState(() => _isLoading = false);
+                                    if (mounted) setState(() => _isLoading = false);
                                   }
                                 }
                               },

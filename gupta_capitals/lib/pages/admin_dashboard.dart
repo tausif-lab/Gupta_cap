@@ -2,9 +2,11 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import '../services/auth_service.dart';
 import 'admin_login_page.dart';
 import 'admin_queries_page.dart';
 import 'tenant_detail_page.dart';
+import 'admin_floor_config_page.dart';
 
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
@@ -18,13 +20,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
   int _totalTenants = 0;
   bool _isLoading = true;
 
-  String get _baseUrl {
-    if (kIsWeb) return 'http://localhost:3000';
-    if (defaultTargetPlatform == TargetPlatform.android)
-      return 'http://10.0.2.2:3000';
-    return 'http://127.0.0.1:3000';
-  }
-
   @override
   void initState() {
     super.initState();
@@ -34,7 +29,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
   Future<void> _fetchTenants() async {
     try {
       final response = await http
-          .get(Uri.parse('$_baseUrl/api/admin/tenants'))
+          .get(Uri.parse('${AuthService().baseUrl}/api/admin/tenants'), headers: AuthService().headers)
           .timeout(const Duration(seconds: 8));
 
       if (!mounted) return;
@@ -100,10 +95,15 @@ class _AdminDashboardState extends State<AdminDashboard> {
           IconButton(
             icon: const Icon(Icons.logout),
             tooltip: 'Logout',
-            onPressed: () => Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => const AdminLoginPage()),
-            ),
+            onPressed: () async {
+              await AuthService().logout();
+              if (context.mounted) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AdminLoginPage()),
+                );
+              }
+            },
           ),
         ],
       ),
@@ -158,13 +158,13 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     ),
                     const SizedBox(height: 24),
 
-                    // Action buttons (no functionality yet)
+                    // Action buttons
                     Row(
                       children: [
                         Expanded(
                           child: ElevatedButton.icon(
                             icon: const Icon(Icons.question_answer_outlined),
-                            label: const Text('User Queries'),
+                            label: const Text('Queries'),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFFD4A843),
                               foregroundColor: Colors.white,
@@ -184,8 +184,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: ElevatedButton.icon(
-                            icon: const Icon(Icons.payment_outlined),
-                            label: const Text('Payments'),
+                            icon: const Icon(Icons.meeting_room_outlined),
+                            label: const Text('Floor Config'),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF1A3A5C),
                               foregroundColor: Colors.white,
@@ -194,11 +194,12 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                            onPressed: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Coming soon!')),
-                              );
-                            },
+                            onPressed: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => AdminFloorConfigPage(),
+                              ),
+                            ),
                           ),
                         ),
                       ],
@@ -279,7 +280,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                         ),
                                         const SizedBox(height: 2),
                                         Text(
-                                          tenant['flat'],
+                                          '${tenant['floor'] ?? '-'} - Room ${tenant['room'] ?? '-'}',
                                           style: const TextStyle(
                                             color: Color(0xFF6B6154),
                                             fontSize: 13,

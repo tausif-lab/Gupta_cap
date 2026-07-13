@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import '../services/auth_service.dart';
 
 class TenantDetailPage extends StatefulWidget {
   final String tenantId;
@@ -32,13 +33,7 @@ class _TenantDetailPageState extends State<TenantDetailPage> {
   bool _isLoadingRequests = true;
   String? _verifyingRequestId;
 
-  String get _baseUrl {
-    if (kIsWeb) return 'http://localhost:3000';
-    if (defaultTargetPlatform == TargetPlatform.android) return 'http://10.0.2.2:3000';
-    return 'http://127.0.0.1:3000';
-  }
-
- @override
+  @override
   void initState() {
     super.initState();
     _loadRentConfig();
@@ -48,7 +43,7 @@ class _TenantDetailPageState extends State<TenantDetailPage> {
   Future<void> _loadPaymentRequests() async {
     try {
       final response = await http
-          .get(Uri.parse('$_baseUrl/api/payment/tenant-requests/${widget.tenantId}'))
+          .get(Uri.parse('${AuthService().baseUrl}/api/payment/tenant-requests/${widget.tenantId}'), headers: AuthService().headers)
           .timeout(const Duration(seconds: 8));
 
       if (!mounted) return;
@@ -69,7 +64,7 @@ class _TenantDetailPageState extends State<TenantDetailPage> {
     setState(() => _verifyingRequestId = requestId);
     try {
       final response = await http
-          .post(Uri.parse('$_baseUrl/api/payment/verify/$requestId'))
+          .post(Uri.parse('${AuthService().baseUrl}/api/payment/verify/$requestId'), headers: AuthService().headers)
           .timeout(const Duration(seconds: 8));
 
       if (!mounted) return;
@@ -106,7 +101,7 @@ class _TenantDetailPageState extends State<TenantDetailPage> {
   Future<void> _loadRentConfig() async {
     try {
       final response = await http
-          .get(Uri.parse('$_baseUrl/api/admin/rent/${widget.tenantId}'))
+          .get(Uri.parse('${AuthService().baseUrl}/api/admin/rent/${widget.tenantId}'), headers: AuthService().headers)
           .timeout(const Duration(seconds: 8));
 
       if (!mounted) return;
@@ -140,8 +135,8 @@ class _TenantDetailPageState extends State<TenantDetailPage> {
     setState(() => _isSaving = true);
     try {
       final response = await http.post(
-        Uri.parse('$_baseUrl/api/admin/rent/${widget.tenantId}'),
-        headers: {'Content-Type': 'application/json'},
+        Uri.parse('${AuthService().baseUrl}/api/admin/rent/${widget.tenantId}'),
+        headers: AuthService().headers,
         body: jsonEncode({
           'rentStartDate': _rentStartDate!.toIso8601String(),
           'penaltyStartDay': int.parse(_penaltyStartDayController.text.trim()),

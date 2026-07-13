@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import '../services/auth_service.dart';
 
 class UserInfoPage extends StatefulWidget {
   final String userId;
@@ -18,12 +19,6 @@ class _UserInfoPageState extends State<UserInfoPage> {
   Map<String, dynamic>? _rentInfo;
   bool _isLoading = true;
 
-  String get _baseUrl {
-    if (kIsWeb) return 'http://localhost:3000';
-    if (defaultTargetPlatform == TargetPlatform.android) return 'http://10.0.2.2:3000';
-    return 'http://127.0.0.1:3000';
-  }
-
   @override
   void initState() {
     super.initState();
@@ -33,7 +28,7 @@ class _UserInfoPageState extends State<UserInfoPage> {
   Future<void> _fetchDetails() async {
     try {
       final response = await http
-          .get(Uri.parse('$_baseUrl/api/user/${widget.userId}'))
+          .get(Uri.parse('${AuthService().baseUrl}/api/user/${widget.userId}'), headers: AuthService().headers)
           .timeout(const Duration(seconds: 8));
 
       if (!mounted) return;
@@ -106,7 +101,9 @@ class _UserInfoPageState extends State<UserInfoPage> {
                       _infoRow('Name', _user!['name'] ?? '-'),
                       _infoRow('Mobile', _user!['mobile'] ?? '-'),
                       _infoRow('Email', _user!['email']?.isNotEmpty == true ? _user!['email'] : 'Not provided'),
-                      _infoRow('Flat', _user!['flat'] ?? '-'),
+                      _infoRow('Floor', _user!['floor'] ?? '-'),
+                      _infoRow('Room', _user!['room'] ?? '-'),
+                      _infoRow('Room Type', _user!['roomType'] ?? '-'),
                       _infoRow('Payment Status', _user!['paymentStatus'] ?? 'Pending'),
                     ]),
 

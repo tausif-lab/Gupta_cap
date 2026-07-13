@@ -20,17 +20,30 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       default: '',
     },
+    floor: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    room: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    roomType: {
+      type: String,
+      enum: ['Residential', 'Commercial'],
+      default: 'Residential',
+    },
     flat: {
       type: String,
-      required: true,
       trim: true,
+      default: '',
     },
     password: {
       type: String,
       required: true,
     },
-
-    // Add after the 'flat' field
     paymentStatus: {
     type: String,
     enum: ['Paid', 'Pending', 'Overdue'],

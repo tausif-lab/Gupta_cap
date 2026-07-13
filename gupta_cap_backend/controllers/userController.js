@@ -5,7 +5,7 @@ const RentConfig = require('../models/RentConfig');
 // @route GET /api/user/:userId
 const getUserDetails = async (req, res) => {
   try {
-    const user = await User.findById(req.params.userId, 'name mobile email flat paymentStatus');
+    const user = await User.findById(req.params.userId, 'name mobile email floor room roomType flat paymentStatus');
     if (!user) return res.status(404).json({ message: 'User not found' });
 
     const config = await RentConfig.findOne({ userId: req.params.userId });

@@ -2,8 +2,10 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import '../services/auth_service.dart';
 import '../widgets/custom_widgets.dart';
 import 'login_page.dart';
+import 'user_dashboard.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -19,26 +21,53 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _obscure = true;
-  String? _selectedFlat;
+  String? _selectedFloor;
+  String? _selectedRoom;
   bool _isLoading = false;
+  bool _isLoadingFloors = true;
 
-  final List<String> _flats = [
-    'Flat 101 – Ground Floor',
-    'Flat 102 – Ground Floor',
-    'Flat 201 – First Floor',
-    'Flat 202 – First Floor',
-    'Flat 301 – Second Floor',
-    'Flat 302 – Second Floor',
-  ];
+  List<dynamic> _floors = [];
 
   String get _baseUrl {
-    if (kIsWeb) {
-      return 'http://localhost:3000';
-    }
-    if (defaultTargetPlatform == TargetPlatform.android) {
-      return 'http://10.0.2.2:3000';
-    }
+    if (kIsWeb) return 'http://localhost:3000';
+    if (defaultTargetPlatform == TargetPlatform.android) return 'http://10.0.2.2:3000';
     return 'http://127.0.0.1:3000';
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchFloors();
+  }
+
+  Future<void> _fetchFloors() async {
+    try {
+      final response = await http
+          .get(Uri.parse('$_baseUrl/api/floor-configs'))
+          .timeout(const Duration(seconds: 8));
+      if (!mounted) return;
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        setState(() {
+          _floors = data['floors'] ?? [];
+          _isLoadingFloors = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _isLoadingFloors = false);
+    }
+  }
+
+  List<String> get _floorNames => _floors.map((f) => f['floor'] as String).toList();
+
+  List<dynamic>? get _roomsForSelectedFloor {
+    if (_selectedFloor == null) return null;
+    final floor = _floors.firstWhere(
+      (f) => f['floor'] == _selectedFloor,
+      orElse: () => null,
+    );
+    if (floor == null) return null;
+    return (floor['rooms'] as List<dynamic>?)?.cast<Map<String, dynamic>>();
   }
 
   @override
@@ -94,21 +123,42 @@ class _RegisterPageState extends State<RegisterPage> {
                   decoration: const InputDecoration(hintText: 'your@email.com', prefixIcon: Icon(Icons.email_outlined)),
                 ),
                 const SizedBox(height: 18),
-                const FieldLabel('Select Your Flat / Unit'),
+                const FieldLabel('Select Floor'),
                 DropdownButtonFormField<String>(
-                  value: _selectedFlat,
+                  value: _selectedFloor,
                   isExpanded: true,
-                  decoration: InputDecoration(
-                    filled: true,
-                    fillColor: Colors.white,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFD0C9BC), width: 1.5)),
-                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFD0C9BC), width: 1.5)),
+                  decoration: _dropdownDecoration(),
+                  hint: Text(
+                    _isLoadingFloors ? 'Loading floors...' : 'Choose floor',
+                    style: const TextStyle(fontSize: 16, color: Color(0xFF9E9080)),
                   ),
-                  hint: const Text('Choose your flat', style: TextStyle(fontSize: 16, color: Color(0xFF9E9080))),
-                  items: _flats.map((f) => DropdownMenuItem(value: f, child: Text(f, overflow: TextOverflow.ellipsis))).toList(),
-                  onChanged: (v) => setState(() => _selectedFlat = v),
-                  validator: (v) => v == null ? 'Please select your flat' : null,
+                  items: _floorNames.map((f) => DropdownMenuItem(value: f, child: Text(f, overflow: TextOverflow.ellipsis))).toList(),
+                  onChanged: _isLoadingFloors
+                      ? null
+                      : (v) => setState(() {
+                            _selectedFloor = v;
+                            _selectedRoom = null;
+                          }),
+                  validator: (v) => v == null ? 'Please select a floor' : null,
+                ),
+                const SizedBox(height: 18),
+                const FieldLabel('Select Room / Unit'),
+                DropdownButtonFormField<String>(
+                  value: _selectedRoom,
+                  isExpanded: true,
+                  decoration: _dropdownDecoration(),
+                  hint: Text(
+                    _selectedFloor == null ? 'Select a floor first' : 'Choose room',
+                    style: const TextStyle(fontSize: 16, color: Color(0xFF9E9080)),
+                  ),
+                  items: _roomsForSelectedFloor
+                      ?.map((r) => DropdownMenuItem(
+                            value: r['number'].toString(),
+                            child: Text('Room ${r['number']} — ${r['type']}', overflow: TextOverflow.ellipsis),
+                          ))
+                      .toList() ?? [],
+                  onChanged: _selectedFloor == null ? null : (v) => setState(() => _selectedRoom = v),
+                  validator: (v) => v == null ? 'Please select a room' : null,
                 ),
                 const SizedBox(height: 18),
                 const FieldLabel('Set Password'),
@@ -134,8 +184,10 @@ class _RegisterPageState extends State<RegisterPage> {
                       : () async {
                           if (_formKey.currentState!.validate()) {
                             setState(() => _isLoading = true);
-
                             try {
+                              final roomInfo = _roomsForSelectedFloor
+                                  ?.firstWhere((r) => r['number'].toString() == _selectedRoom);
+
                               final response = await http
                                   .post(
                                     Uri.parse('$_baseUrl/api/register'),
@@ -144,22 +196,32 @@ class _RegisterPageState extends State<RegisterPage> {
                                       'name': _nameController.text.trim(),
                                       'mobile': _mobileController.text.trim(),
                                       'email': _emailController.text.trim(),
-                                      'flat': _selectedFlat,
+                                      'floor': _selectedFloor,
+                                      'room': _selectedRoom,
+                                      'roomType': roomInfo?['type'] ?? 'Residential',
                                       'password': _passwordController.text.trim(),
                                     }),
                                   )
                                   .timeout(const Duration(seconds: 8));
 
                               if (!mounted) return;
-
                               final data = jsonDecode(response.body);
                               if (response.statusCode == 201) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text(data['message'] ?? 'Registration successful')),
+                                await AuthService().saveSession(
+                                  token: data['token'],
+                                  userId: data['user']['id'],
+                                  userName: data['user']['name'],
+                                  role: 'user',
                                 );
+                                if (!mounted) return;
                                 Navigator.pushReplacement(
                                   context,
-                                  MaterialPageRoute(builder: (_) => const LoginPage()),
+                                  MaterialPageRoute(
+                                    builder: (_) => UserDashboard(
+                                      userId: data['user']['id'],
+                                      userName: data['user']['name'],
+                                    ),
+                                  ),
                                 );
                               } else {
                                 ScaffoldMessenger.of(context).showSnackBar(
@@ -172,9 +234,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                 SnackBar(content: Text('Unable to connect to server: $e')),
                               );
                             } finally {
-                              if (mounted) {
-                                setState(() => _isLoading = false);
-                              }
+                              if (mounted) setState(() => _isLoading = false);
                             }
                           }
                         },
@@ -195,6 +255,16 @@ class _RegisterPageState extends State<RegisterPage> {
           ),
         ),
       ),
+    );
+  }
+
+  InputDecoration _dropdownDecoration() {
+    return InputDecoration(
+      filled: true,
+      fillColor: Colors.white,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFD0C9BC), width: 1.5)),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFD0C9BC), width: 1.5)),
     );
   }
 }

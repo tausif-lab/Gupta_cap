@@ -1,15 +1,14 @@
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
+const { generateToken } = require('../middleware/auth');
 
-// @desc    Register new user
-// @route   POST /api/register
 const registerUser = async (req, res) => {
   try {
-    const { name, mobile, email, flat, password } = req.body;
+    const { name, mobile, email, floor, room, roomType, password } = req.body;
 
-    if (!name || !mobile || !flat || !password) {
+    if (!name || !mobile || !floor || !room || !password) {
       return res.status(400).json({
-        message: 'Name, mobile, flat and password are required',
+        message: 'Name, mobile, floor, room and password are required',
       });
     }
 
@@ -20,22 +19,33 @@ const registerUser = async (req, res) => {
       });
     }
 
+    const flatLabel = `${floor} - Room ${room}${roomType ? ` (${roomType})` : ''}`;
+
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await User.create({
       name,
       mobile,
       email: email || '',
-      flat,
+      floor,
+      room,
+      roomType: roomType || 'Residential',
+      flat: flatLabel,
       password: hashedPassword,
     });
 
+    const token = generateToken({ id: user._id, role: 'user' });
+
     res.status(201).json({
       message: 'Registration successful',
+      token,
       user: {
         id: user._id,
         name: user.name,
         mobile: user.mobile,
         email: user.email,
+        floor: user.floor,
+        room: user.room,
+        roomType: user.roomType,
         flat: user.flat,
       },
     });
@@ -50,8 +60,6 @@ const registerUser = async (req, res) => {
   }
 };
 
-// @desc    Login user
-// @route   POST /api/login
 const loginUser = async (req, res) => {
   try {
     const { identifier, password } = req.body;
@@ -75,13 +83,19 @@ const loginUser = async (req, res) => {
       return res.status(401).json({ message: 'Invalid password' });
     }
 
+    const token = generateToken({ id: user._id, role: 'user' });
+
     res.json({
       message: 'Login successful',
+      token,
       user: {
         id: user._id,
         name: user.name,
         mobile: user.mobile,
         email: user.email,
+        floor: user.floor,
+        room: user.room,
+        roomType: user.roomType,
         flat: user.flat,
         paymentStatus: user.paymentStatus,
       },

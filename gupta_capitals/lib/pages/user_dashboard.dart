@@ -1,9 +1,15 @@
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import '../services/auth_service.dart';
 import 'user_info_page.dart';
 import 'user_queries_page.dart';
 import 'pay_rent_page.dart';
 import 'payment_history_page.dart';
-class UserDashboard extends StatelessWidget {
+import 'notifications_page.dart';
+
+class UserDashboard extends StatefulWidget {
   final String userId;
   final String userName;
 
@@ -12,6 +18,46 @@ class UserDashboard extends StatelessWidget {
     required this.userId,
     required this.userName,
   });
+
+  @override
+  State<UserDashboard> createState() => _UserDashboardState();
+}
+
+class _UserDashboardState extends State<UserDashboard> {
+  int _unreadCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUnreadCount();
+  }
+
+  Future<void> _fetchUnreadCount() async {
+    try {
+      final response = await http
+          .get(Uri.parse('${AuthService().baseUrl}/api/notifications/${widget.userId}/unread-count'), headers: AuthService().headers)
+          .timeout(const Duration(seconds: 8));
+
+      if (!mounted) return;
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        setState(() {
+          _unreadCount = data['unreadCount'] ?? 0;
+        });
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _openNotifications() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => NotificationsPage(userId: widget.userId),
+      ),
+    );
+    _fetchUnreadCount();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,10 +85,40 @@ class UserDashboard extends StatelessWidget {
           ],
         ),
         actions: [
+          Stack(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.notifications_outlined),
+                tooltip: 'Notifications',
+                onPressed: _openNotifications,
+              ),
+              if (_unreadCount > 0)
+                Positioned(
+                  right: 6,
+                  top: 6,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                    child: Text(
+                      _unreadCount > 99 ? '99+' : '$_unreadCount',
+                      style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
+          ),
           IconButton(
             icon: const Icon(Icons.logout),
             tooltip: 'Logout',
-            onPressed: () => Navigator.pushReplacementNamed(context, '/'),
+            onPressed: () async {
+              await AuthService().logout();
+              if (context.mounted) Navigator.pushReplacementNamed(context, '/');
+            },
           ),
         ],
       ),
@@ -57,7 +133,7 @@ class UserDashboard extends StatelessWidget {
                 context,
                 MaterialPageRoute(
                   builder: (_) =>
-                      UserInfoPage(userId: userId, userName: userName),
+                      UserInfoPage(userId: widget.userId, userName: widget.userName),
                 ),
               ),
               child: Container(
@@ -73,7 +149,7 @@ class UserDashboard extends StatelessWidget {
                       radius: 28,
                       backgroundColor: const Color(0xFFD4A843),
                       child: Text(
-                        userName.isNotEmpty ? userName[0].toUpperCase() : 'U',
+                        widget.userName.isNotEmpty ? widget.userName[0].toUpperCase() : 'U',
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 24,
@@ -87,7 +163,7 @@ class UserDashboard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            userName,
+                            widget.userName,
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 18,
@@ -142,7 +218,7 @@ class UserDashboard extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (_) =>
-                          PayRentPage(userId: userId, userName: userName),
+                          PayRentPage(userId: widget.userId, userName: widget.userName),
                     ),
                   ),
                 ),
@@ -154,7 +230,7 @@ class UserDashboard extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (_) =>
-                          UserQueriesPage(userId: userId, userName: userName),
+                          UserQueriesPage(userId: widget.userId, userName: widget.userName),
                     ),
                   ),
                 ),
@@ -173,7 +249,7 @@ class UserDashboard extends StatelessWidget {
   onTap: () => Navigator.push(
     context,
     MaterialPageRoute(
-      builder: (_) => PaymentHistoryPage(userId: userId, userName: userName),
+      builder: (_) => PaymentHistoryPage(userId: widget.userId, userName: widget.userName),
     ),
   ),
 ),
