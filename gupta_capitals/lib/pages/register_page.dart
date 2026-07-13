@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import '../services/auth_service.dart';
 import '../widgets/custom_widgets.dart';
 import 'login_page.dart';
@@ -27,8 +26,6 @@ class _RegisterPageState extends State<RegisterPage> {
 
   List<dynamic> _floors = [];
 
-  String get _baseUrl => 'https://gupta-cap.onrender.com';
-
   @override
   void initState() {
     super.initState();
@@ -37,9 +34,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
   Future<void> _fetchFloors() async {
     try {
-      final response = await http
-          .get(Uri.parse('$_baseUrl/api/floor-configs'))
-          .timeout(const Duration(seconds: 8));
+      final response = await AuthService().get('/api/floor-configs', retries: 1);
       if (!mounted) return;
       final data = jsonDecode(response.body);
       if (response.statusCode == 200) {
@@ -183,21 +178,18 @@ class _RegisterPageState extends State<RegisterPage> {
                               final roomInfo = _roomsForSelectedFloor
                                   ?.firstWhere((r) => r['number'].toString() == _selectedRoom);
 
-                              final response = await http
-                                  .post(
-                                    Uri.parse('$_baseUrl/api/register'),
-                                    headers: {'Content-Type': 'application/json'},
-                                    body: jsonEncode({
-                                      'name': _nameController.text.trim(),
-                                      'mobile': _mobileController.text.trim(),
-                                      'email': _emailController.text.trim(),
-                                      'floor': _selectedFloor,
-                                      'room': _selectedRoom,
-                                      'roomType': roomInfo?['type'] ?? 'Residential',
-                                      'password': _passwordController.text.trim(),
-                                    }),
-                                  )
-                                  .timeout(const Duration(seconds: 8));
+                              final response = await AuthService().post(
+                                '/api/register',
+                                body: {
+                                  'name': _nameController.text.trim(),
+                                  'mobile': _mobileController.text.trim(),
+                                  'email': _emailController.text.trim(),
+                                  'floor': _selectedFloor,
+                                  'room': _selectedRoom,
+                                  'roomType': roomInfo?['type'] ?? 'Residential',
+                                  'password': _passwordController.text.trim(),
+                                },
+                              );
 
                               if (!mounted) return;
                               final data = jsonDecode(response.body);

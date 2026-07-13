@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import '../services/auth_service.dart';
 
 class AdminQueriesPage extends StatefulWidget {
@@ -34,9 +33,7 @@ class _AdminQueriesPageState extends State<AdminQueriesPage> {
   Future<void> _fetchQueries() async {
     setState(() => _isLoading = true);
     try {
-      final response = await http
-          .get(Uri.parse('${AuthService().baseUrl}/api/admin/queries'), headers: AuthService().headers)
-          .timeout(const Duration(seconds: 8));
+      final response = await AuthService().get('/api/admin/queries');
 
       if (!mounted) return;
       final data = jsonDecode(response.body);
@@ -72,13 +69,7 @@ class _AdminQueriesPageState extends State<AdminQueriesPage> {
     if (reply.isEmpty) return;
 
     try {
-      final response = await http
-          .put(
-            Uri.parse('${AuthService().baseUrl}/api/admin/queries/$queryId/resolve'),
-            headers: AuthService().headers,
-            body: jsonEncode({'adminReply': reply}),
-          )
-          .timeout(const Duration(seconds: 8));
+      final response = await AuthService().put('/api/admin/queries/$queryId/resolve', body: {'adminReply': reply});
 
       if (!mounted) return;
       final data = jsonDecode(response.body);

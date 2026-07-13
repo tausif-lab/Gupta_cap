@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import '../services/auth_service.dart';
 
 class AdminFloorConfigPage extends StatefulWidget {
@@ -24,9 +23,7 @@ class _AdminFloorConfigPageState extends State<AdminFloorConfigPage> {
 
   Future<void> _fetchConfig() async {
     try {
-      final response = await http
-          .get(Uri.parse('${AuthService().baseUrl}/api/floor-configs'), headers: AuthService().headers)
-          .timeout(const Duration(seconds: 8));
+      final response = await AuthService().get('/api/floor-configs');
 
       if (!mounted) return;
       final data = jsonDecode(response.body);
@@ -87,13 +84,7 @@ class _AdminFloorConfigPageState extends State<AdminFloorConfigPage> {
 
     setState(() => _isSaving = true);
     try {
-      final response = await http
-          .post(
-            Uri.parse('${AuthService().baseUrl}/api/floor-configs'),
-            headers: AuthService().headers,
-            body: jsonEncode({'floors': _floors}),
-          )
-          .timeout(const Duration(seconds: 8));
+      final response = await AuthService().post('/api/floor-configs', body: {'floors': _floors});
 
       if (!mounted) return;
       final data = jsonDecode(response.body);
