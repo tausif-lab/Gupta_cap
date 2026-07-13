@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'services/auth_service.dart';
 import 'pages/landing_page.dart';
+import 'pages/user_dashboard.dart';
+import 'pages/admin_dashboard.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await AuthService().init();
   runApp(const GuptaCapitalsApp());
 }
 
@@ -10,6 +15,21 @@ class GuptaCapitalsApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final auth = AuthService();
+    final Widget home;
+    if (auth.isLoggedIn) {
+      if (auth.isAdmin) {
+        home = const AdminDashboard();
+      } else {
+        home = UserDashboard(
+          userId: auth.userId ?? '',
+          userName: auth.userName ?? 'User',
+        );
+      }
+    } else {
+      home = const LandingPage();
+    }
+
     return MaterialApp(
       title: 'Gupta Capitals',
       debugShowCheckedModeBanner: false,
@@ -41,7 +61,7 @@ class GuptaCapitalsApp extends StatelessWidget {
           labelStyle: const TextStyle(fontSize: 16, color: Color(0xFF6B6154)),
         ),
       ),
-      home: const LandingPage(),
+      home: home,
     );
   }
 }

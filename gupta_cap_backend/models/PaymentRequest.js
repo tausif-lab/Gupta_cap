@@ -15,6 +15,7 @@ const paymentRequestSchema = new mongoose.Schema(
     totalPaid: { type: Number, required: true },
     dueDate: { type: Date, required: true },
     cycleStart: { type: Date, required: true },
+    periodEnd: { type: Date, required: true },
     cycleMonthLabel: { type: String, required: true },
 
     status: {

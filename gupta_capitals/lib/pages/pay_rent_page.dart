@@ -1,7 +1,7 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import '../services/auth_service.dart';
 
 class PayRentPage extends StatefulWidget {
   final String userId;
@@ -21,12 +21,6 @@ class _PayRentPageState extends State<PayRentPage> {
   bool _requestSubmitted = false;
   bool _hasPendingRequest = false;
 
-  String get _baseUrl {
-    if (kIsWeb) return 'http://localhost:3000';
-    if (defaultTargetPlatform == TargetPlatform.android) return 'http://10.0.2.2:3000';
-    return 'http://127.0.0.1:3000';
-  }
-
   @override
   void initState() {
     super.initState();
@@ -37,7 +31,7 @@ class _PayRentPageState extends State<PayRentPage> {
   Future<void> _checkPaymentStatus() async {
     try {
       final response = await http
-          .get(Uri.parse('$_baseUrl/api/payment/status/${widget.userId}'))
+          .get(Uri.parse('${AuthService().baseUrl}/api/payment/status/${widget.userId}'), headers: AuthService().headers)
           .timeout(const Duration(seconds: 8));
 
       if (!mounted) return;
@@ -49,39 +43,52 @@ class _PayRentPageState extends State<PayRentPage> {
         });
       }
     } catch (_) {
-      // Ignore — treat as no pending request
     }
   }
 
   Future<void> _fetchDetails() async {
     try {
       final response = await http
-          .get(Uri.parse('$_baseUrl/api/user/${widget.userId}'))
+          .get(Uri.parse('${AuthService().baseUrl}/api/user/${widget.userId}'), headers: AuthService().headers)
           .timeout(const Duration(seconds: 8));
 
       if (!mounted) return;
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
+        final rentInfo = data['rentInfo'];
         setState(() {
           _user = data['user'];
-          _rentInfo = data['rentInfo'];
+          _rentInfo = rentInfo;
           _isLoading = false;
         });
+        if (rentInfo != null && (rentInfo['daysLeft'] ?? 99) <= 2) {
+          _sendPaymentReminder();
+        }
       }
     } catch (e) {
       setState(() => _isLoading = false);
     }
   }
 
+  Future<void> _sendPaymentReminder() async {
+    try {
+      await http.post(
+        Uri.parse('${AuthService().baseUrl}/api/notifications/remind-payment'),
+        headers: AuthService().headers,
+        body: jsonEncode({'userId': widget.userId}),
+      );
+    } catch (_) {
+    }
+  }
+
   Future<void> _submitPaymentRequest() async {
-    print('DEBUG rentInfo before submit: $_rentInfo');
     setState(() => _isSubmitting = true);
     try {
       final response = await http.post(
-        Uri.parse('$_baseUrl/api/payment/request'),
-        headers: {'Content-Type': 'application/json'},
-   body: jsonEncode({
+        Uri.parse('${AuthService().baseUrl}/api/payment/request'),
+        headers: AuthService().headers,
+        body: jsonEncode({
   'userId': widget.userId,
   'userName': _user!['name'],
   'mobile': _user!['mobile'],
@@ -91,6 +98,7 @@ class _PayRentPageState extends State<PayRentPage> {
   'totalPaid': _rentInfo!['totalDue'],
   'dueDate': _rentInfo!['dueDate'],
   'cycleStart': _rentInfo!['cycleStart'],
+  'periodEnd': _rentInfo!['periodEnd'],
   'cycleMonthLabel': _rentInfo!['cycleMonthLabel'],
 }),
       ).timeout(const Duration(seconds: 8));
@@ -210,7 +218,7 @@ class _PayRentPageState extends State<PayRentPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(_user!['name'], style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF1A3A5C))),
-                Text(_user!['flat'], style: const TextStyle(color: Color(0xFF6B6154), fontSize: 14)),
+                Text('${_user!['floor'] ?? '-'} - Room ${_user!['room'] ?? '-'}', style: const TextStyle(color: Color(0xFF6B6154), fontSize: 14)),
                 const Divider(height: 24),
                 const SizedBox(height: 6),
                 Text('Rent for: ${_rentInfo!['cycleMonthLabel']}', style: const TextStyle(color: Color(0xFFD4A843), fontWeight: FontWeight.w700, fontSize: 13)),

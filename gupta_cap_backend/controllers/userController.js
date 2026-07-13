@@ -5,7 +5,7 @@ const RentConfig = require('../models/RentConfig');
 // @route GET /api/user/:userId
 const getUserDetails = async (req, res) => {
   try {
-    const user = await User.findById(req.params.userId, 'name mobile email flat paymentStatus');
+    const user = await User.findById(req.params.userId, 'name mobile email floor room roomType flat paymentStatus');
     if (!user) return res.status(404).json({ message: 'User not found' });
 
     const config = await RentConfig.findOne({ userId: req.params.userId });
@@ -39,12 +39,17 @@ if (config.penaltyEnabled && daysLeft < 0) {
   }
 }
 
+// Rent period always spans exactly 1 month from cycleStart
+const periodEnd = new Date(cycleStart);
+periodEnd.setMonth(periodEnd.getMonth() + 1);
+
 // Label like "July 2026" for clarity in the UI
 const cycleMonthLabel = cycleStart.toLocaleString('en-US', { month: 'long', year: 'numeric' });
 
 rentInfo = {
   monthlyRent: config.monthlyRent,
   cycleStart,
+  periodEnd,
   cycleMonthLabel,
   dueDate,
   daysLeft,
