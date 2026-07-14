@@ -108,7 +108,7 @@ class LandingPage extends StatelessWidget {
                       MaterialPageRoute(builder: (_) => const RegisterPage()),
                     ),
                     child: const Text(
-                      'New Tenant? Register Here', 
+                      'New User? Register Here',
                       style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
                     ),
                   ),

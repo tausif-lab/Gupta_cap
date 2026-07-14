@@ -102,14 +102,14 @@ const getPaymentStatus = async (req, res) => {
   }
 };
 
-const getTenantPaymentRequests = async (req, res) => {
+const getUserPaymentRequests = async (req, res) => {
   try {
     const requests = await PaymentRequest.find({
       userId: req.params.userId,
     }).sort({ createdAt: -1 });
     res.json({ requests });
   } catch (error) {
-    console.error("GET TENANT PAYMENT REQUESTS ERROR:", error);
+    console.error("GET USER PAYMENT REQUESTS ERROR:", error);
     res
       .status(500)
       .json({ message: "Failed to fetch requests", error: error.message });
@@ -119,5 +119,5 @@ module.exports = {
   createPaymentRequest,
   verifyPaymentRequest,
   getPaymentStatus,
-  getTenantPaymentRequests,
+  getUserPaymentRequests,
 };

@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import 'admin_login_page.dart';
 import 'admin_queries_page.dart';
-import 'tenant_detail_page.dart';
+import 'user_detail_page.dart';
 import 'admin_floor_config_page.dart';
 
 class AdminDashboard extends StatefulWidget {
@@ -15,27 +15,27 @@ class AdminDashboard extends StatefulWidget {
 }
 
 class _AdminDashboardState extends State<AdminDashboard> {
-  List<dynamic> _tenants = [];
-  int _totalTenants = 0;
+  List<dynamic> _users = [];
+  int _totalUsers = 0;
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _fetchTenants();
+    _fetchUsers();
   }
 
-  Future<void> _fetchTenants() async {
+  Future<void> _fetchUsers() async {
     try {
-      final response = await AuthService().get('/api/admin/tenants');
+      final response = await AuthService().get('/api/admin/users');
 
       if (!mounted) return;
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
         setState(() {
-          _tenants = data['tenants'];
-          _totalTenants = data['totalTenants'];
+          _users = data['users'];
+          _totalUsers = data['totalUsers'];
           _isLoading = false;
         });
       }
@@ -44,7 +44,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Failed to load tenants: $e')));
+      ).showSnackBar(SnackBar(content: Text('Failed to load users: $e')));
     }
   }
 
@@ -107,14 +107,14 @@ class _AdminDashboardState extends State<AdminDashboard> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
-              onRefresh: _fetchTenants,
+              onRefresh: _fetchUsers,
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.all(20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Tenant count card
+                    // User count card
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(20),
@@ -134,7 +134,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                '$_totalTenants',
+                                '$_totalUsers',
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 32,
@@ -142,7 +142,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                 ),
                               ),
                               const Text(
-                                'Total Tenants',
+                                'Total Users',
                                 style: TextStyle(
                                   color: Color(0xFF8AAAC4),
                                   fontSize: 14,
@@ -203,9 +203,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     ),
                     const SizedBox(height: 24),
 
-                    // Tenants list
+                    // Users list
                     const Text(
-                      'Tenants',
+                      'Users',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
@@ -214,24 +214,24 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     ),
                     const SizedBox(height: 12),
 
-                    if (_tenants.isEmpty)
-                      const Center(child: Text('No tenants registered yet.'))
+                    if (_users.isEmpty)
+                      const Center(child: Text('No Users registered yet.'))
                     else
                       ListView.separated(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
-                        itemCount: _tenants.length,
+                        itemCount: _users.length,
                         separatorBuilder: (_, __) => const SizedBox(height: 10),
                         itemBuilder: (context, index) {
-                          final tenant = _tenants[index];
-                          final status = tenant['paymentStatus'] ?? 'Pending';
+                          final user = _users[index];
+                          final status = user['paymentStatus'] ?? 'Pending';
                           return GestureDetector(
                             onTap: () => Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => TenantDetailPage(
-                                  tenantId: tenant['_id'],
-                                  tenantName: tenant['name'],
+                                builder: (_) => UserDetailPage(
+                                  userId: user['_id'],
+                                  userName: user['name'],
                                 ),
                               ),
                             ),
@@ -255,7 +255,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                   CircleAvatar(
                                     backgroundColor: const Color(0xFF1A3A5C),
                                     child: Text(
-                                      tenant['name'][0].toUpperCase(),
+                                      user['name'][0].toUpperCase(),
                                       style: const TextStyle(
                                         color: Colors.white,
                                         fontWeight: FontWeight.bold,
@@ -269,7 +269,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          tenant['name'],
+                                          user['name'],
                                           style: const TextStyle(
                                             fontWeight: FontWeight.w700,
                                             fontSize: 15,
@@ -277,14 +277,14 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                         ),
                                         const SizedBox(height: 2),
                                         Text(
-                                          '${tenant['floor'] ?? '-'} - Room ${tenant['room'] ?? '-'}',
+                                          '${user['floor'] ?? '-'} - Room ${user['room'] ?? '-'}',
                                           style: const TextStyle(
                                             color: Color(0xFF6B6154),
                                             fontSize: 13,
                                           ),
                                         ),
                                         Text(
-                                          tenant['mobile'],
+                                          user['mobile'],
                                           style: const TextStyle(
                                             color: Color(0xFF6B6154),
                                             fontSize: 13,

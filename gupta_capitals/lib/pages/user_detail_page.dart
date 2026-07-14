@@ -5,21 +5,21 @@ import '../services/auth_service.dart';
 import 'payment_history_page.dart';
 
 
-class TenantDetailPage extends StatefulWidget {
-  final String tenantId;
-  final String tenantName;
+class UserDetailPage extends StatefulWidget {
+  final String userId;
+  final String userName;
 
-  const TenantDetailPage({
+  const UserDetailPage({
     super.key,
-    required this.tenantId,
-    required this.tenantName,
+    required this.userId,
+    required this.userName,
   });
 
   @override
-  State<TenantDetailPage> createState() => _TenantDetailPageState();
+  State<UserDetailPage> createState() => _UserDetailPageState();
 }
 
-class _TenantDetailPageState extends State<TenantDetailPage> {
+class _UserDetailPageState extends State<UserDetailPage> {
   
   final _formKey = GlobalKey<FormState>();
   final _monthlyRentController = TextEditingController();
@@ -44,7 +44,7 @@ class _TenantDetailPageState extends State<TenantDetailPage> {
 
   Future<void> _loadPaymentRequests() async {
     try {
-      final response = await AuthService().get('/api/payment/tenant-requests/${widget.tenantId}');
+      final response = await AuthService().get('/api/payment/user-requests/${widget.userId}');
 
       if (!mounted) return;
       final data = jsonDecode(response.body);
@@ -90,12 +90,12 @@ class _TenantDetailPageState extends State<TenantDetailPage> {
 
 
 
-  Future<void> _deleteTenant() async {
+  Future<void> _deleteUser() async {
   final confirm = await showDialog<bool>(
     context: context,
     builder: (ctx) => AlertDialog(
-      title: const Text('Delete Tenant'),
-      content: Text('Are you sure you want to permanently delete ${widget.tenantName}? This will remove all their data including rent config and payment history.'),
+      title: const Text('Delete User'),
+      content: Text('Are you sure you want to permanently delete ${widget.userName}? This will remove all their data including rent config and payment history.'),
       actions: [
         TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
         TextButton(
@@ -109,18 +109,18 @@ class _TenantDetailPageState extends State<TenantDetailPage> {
   if (confirm != true) return;
 
   try {
-  final response = await AuthService().delete('/api/admin/tenants/deleted/${widget.tenantId}');
+  final response = await AuthService().delete('/api/admin/users/${widget.userId}');
 
   if (!mounted) return;
   final data = jsonDecode(response.body);
     if (response.statusCode == 200) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(data['message'] ?? 'Tenant deleted')),
+        SnackBar(content: Text(data['message'] ?? 'User deleted')),
       );
       Navigator.pop(context, true); // Go back to dashboard, signal refresh needed
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(data['message'] ?? 'Failed to delete tenant')),
+        SnackBar(content: Text(data['message'] ?? 'Failed to delete user')),
       );
     }
   } catch (e) {
@@ -141,7 +141,7 @@ class _TenantDetailPageState extends State<TenantDetailPage> {
 
   Future<void> _loadRentConfig() async {
     try {
-      final response = await AuthService().get('/api/admin/rent/${widget.tenantId}');
+      final response = await AuthService().get('/api/admin/rent/${widget.userId}');
 
       if (!mounted) return;
 
@@ -173,7 +173,7 @@ class _TenantDetailPageState extends State<TenantDetailPage> {
 
     setState(() => _isSaving = true);
     try {
-      final response = await AuthService().post('/api/admin/rent/${widget.tenantId}', body: {
+      final response = await AuthService().post('/api/admin/rent/${widget.userId}', body: {
         'rentStartDate': _rentStartDate!.toIso8601String(),
         'penaltyStartDay': int.parse(_penaltyStartDayController.text.trim()),
         'monthlyRent': double.parse(_monthlyRentController.text.trim()),
@@ -214,7 +214,7 @@ class _TenantDetailPageState extends State<TenantDetailPage> {
       appBar: AppBar(
   backgroundColor: const Color(0xFF1A3A5C),
   foregroundColor: Colors.white,
-  title: Text(widget.tenantName, style: const TextStyle(fontWeight: FontWeight.w700)),
+  title: Text(widget.userName, style: const TextStyle(fontWeight: FontWeight.w700)),
   actions: [
     IconButton(
       icon: const Icon(Icons.history),
@@ -223,16 +223,16 @@ class _TenantDetailPageState extends State<TenantDetailPage> {
         context,
         MaterialPageRoute(
           builder: (_) => PaymentHistoryPage(
-            userId: widget.tenantId,
-            userName: widget.tenantName,
+            userId: widget.userId,
+            userName: widget.userName,
           ),
         ),
       ),
     ),
     IconButton(
       icon: const Icon(Icons.delete_outline),
-      tooltip: 'Delete Tenant',
-      onPressed: _deleteTenant,
+      tooltip: 'Delete User',
+      onPressed: _deleteUser,
     ),
   ],
 ),

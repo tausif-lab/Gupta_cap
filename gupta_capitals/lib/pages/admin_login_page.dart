@@ -53,7 +53,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                 const SizedBox(height: 16),
                 const Text('Admin / Owner Portal', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w800)),
                 const SizedBox(height: 6),
-                const Text('Manage tenants, payments & more', style: TextStyle(color: Color(0xFF8AAAC4), fontSize: 14)),
+                const Text('Manage Users, payments & more', style: TextStyle(color: Color(0xFF8AAAC4), fontSize: 14)),
                 const SizedBox(height: 32),
                 Container(
                   padding: const EdgeInsets.all(24),
