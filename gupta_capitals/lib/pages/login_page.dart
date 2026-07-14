@@ -33,7 +33,7 @@ class _LoginPageState extends State<LoginPage> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF1A3A5C),
         foregroundColor: Colors.white,
-        title: const Text('Tenant Login', style: TextStyle(fontWeight: FontWeight.w700)),
+        title: const Text('User Login', style: TextStyle(fontWeight: FontWeight.w700)),
         elevation: 0,
       ),
       body: SafeArea(

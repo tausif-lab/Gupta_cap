@@ -1,6 +1,6 @@
 const RentConfig = require("../models/RentConfig");
 
-// @desc   Get rent config for a tenant
+// @desc   Get rent config for a user
 // @route  GET /api/admin/rent/:userId
 const getRentConfig = async (req, res) => {
   try {
@@ -8,7 +8,7 @@ const getRentConfig = async (req, res) => {
     if (!config) {
       return res
         .status(404)
-        .json({ message: "No rent config found for this tenant" });
+        .json({ message: "No rent config found for this user" });
     }
     res.json(config);
   } catch (error) {
@@ -19,7 +19,7 @@ const getRentConfig = async (req, res) => {
   }
 };
 
-// @desc   Create or update rent config for a tenant
+// @desc   Create or update rent config for a user
 // @route  POST /api/admin/rent/:userId
 const saveRentConfig = async (req, res) => {
   try {

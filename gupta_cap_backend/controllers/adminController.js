@@ -27,36 +27,36 @@ const adminLogin = async (req, res) => {
   }
 };
 
-const getAllTenants = async (req, res) => {
+const getAllUsers = async (req, res) => {
   try {
-    const tenants = await User.find({}, 'name mobile floor room roomType flat paymentStatus email');
+    const users = await User.find({}, 'name mobile floor room roomType flat paymentStatus email');
     res.json({
-      totalTenants: tenants.length,
-      tenants,
+      totalUsers: users.length,
+      users,
     });
   } catch (error) {
-    console.error('GET TENANTS ERROR:', error);
-    res.status(500).json({ message: 'Failed to fetch tenants', error: error.message });
+    console.error('GET USERS ERROR:', error);
+    res.status(500).json({ message: 'Failed to fetch users', error: error.message });
   }
 };
 
-// @route DELETE /api/admin/tenants/:userId
-const deleteTenant = async (req, res) => {
+// @route DELETE /api/admin/users/:userId
+const deleteUser = async (req, res) => {
   try {
     const { userId } = req.params;
 
     const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ message: 'Tenant not found' });
+    if (!user) return res.status(404).json({ message: 'User not found' });
 
     await User.findByIdAndDelete(userId);
     await RentConfig.deleteMany({ userId });
     await PaymentRequest.deleteMany({ userId });
 
-    res.json({ message: 'Tenant deleted successfully' });
+    res.json({ message: 'User deleted successfully' });
   } catch (error) {
-    console.error('DELETE TENANT ERROR:', error);
-    res.status(500).json({ message: 'Failed to delete tenant', error: error.message });
+    console.error('DELETE USER ERROR:', error);
+    res.status(500).json({ message: 'Failed to delete user', error: error.message });
   }
 };
 
-module.exports = { adminLogin, getAllTenants ,deleteTenant };
+module.exports = { adminLogin, getAllUsers, deleteUser };
