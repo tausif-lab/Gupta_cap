@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" fill="none">
+  
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="#E3A82B" stroke="#0D385B" stroke-width="2.5" />
+
+  
+  <path d="M18 48V20C18 18.3431 19.3431 17 21 17H35C36.6569 17 38 18.3431 38 20V48H18Z" fill="#FFFFFF" />
+
+  
+  <path d="M38 28H45C46.6569 28 48 29.3431 48 31V48H38V28Z" fill="#FFFFFF" fill-opacity="0.92" />
+
+  
+  <rect x="22" y="22" width="4.5" height="4.5" rx="1" fill="#0D385B" />
+  <rect x="29.5" y="22" width="4.5" height="4.5" rx="1" fill="#0D385B" />
+  <rect x="22" y="29.5" width="4.5" height="4.5" rx="1" fill="#0D385B" />
+  <rect x="29.5" y="29.5" width="4.5" height="4.5" rx="1" fill="#0D385B" />
+
+  
+  <rect x="41" y="33" width="4" height="4" rx="1" fill="#0D385B" />
+  <rect x="41" y="40" width="4" height="4" rx="1" fill="#0D385B" />
+
+  
+  <path d="M25.5 48V40.5C25.5 39.6716 26.1716 39 27 39H29C29.8284 39 30.5 39.6716 30.5 40.5V48H25.5Z" fill="#0D385B" />
+
+  
+  <rect x="14" y="47" width="36" height="3" rx="1.5" fill="#0D385B" />
+</svg>
